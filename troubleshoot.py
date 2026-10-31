@@ -230,7 +230,9 @@ class Collector:
                     if csi.get('volumeHandle'): self.identifiers.add(csi['volumeHandle'])
         for name in sorted(storage_classes):
             storage_class = self.object('storageclasses.storage.k8s.io', name, category='storageclass')
-            if storage_class and storage_class.get('provisioner'): drivers.add(storage_class['provisioner'])
+            if storage_class and storage_class.get('provisioner') and not storage_class['provisioner'].startswith('kubernetes.io/'):
+                # Static/in-tree provisioners are not CSIDriver object names.
+                drivers.add(storage_class['provisioner'])
         for driver in sorted(drivers): self.object('csidrivers.storage.k8s.io', driver, optional=True, category='csidriver')
         attachments = items(self.object('volumeattachments.storage.k8s.io', category='volumeattachment-discovery'))
         pv_names = {pv['metadata']['name'] for pv in self.pvs}
